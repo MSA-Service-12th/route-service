@@ -14,7 +14,7 @@ spring:
 
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_URL:localhost:5435/hub}
+    url: jdbc:postgresql://${DB_URL:localhost:5435/route}
     username: ${DB_USERNAME:postgres}
     password: ${DB_PASSWORD:postgres}
   jpa:
@@ -37,6 +37,9 @@ eureka:
 
 server:
   port: 18105
+
+tmap:
+  api-key: ${TMAP_API_KEY}
 
 management:
   endpoints:
