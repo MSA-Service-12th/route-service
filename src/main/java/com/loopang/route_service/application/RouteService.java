@@ -19,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -71,10 +70,10 @@ public class RouteService {
     @Transactional
     public RouteDeleteResponse deleteRoute(UUID routeId) {
         HubRoute route = findById(routeId);
-        route.delete(null);
+        route.delete(null); // TODO: SecurityUtil 전환 후 현재 유저 UUID 전달
         return RouteDeleteResponse.builder()
                 .routeId(routeId)
-                .deletedAt(LocalDateTime.now())
+                .deletedAt(route.getDeletedAt()) // BaseUserEntity.delete()가 세팅한 값을 그대로 사용 — 응답과 DB 값 일치 보장
                 .build();
     }
 
