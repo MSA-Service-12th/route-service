@@ -41,6 +41,9 @@ server:
 tmap:
   api-key: ${TMAP_API_KEY}
 
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
+
 management:
   endpoints:
     web:
