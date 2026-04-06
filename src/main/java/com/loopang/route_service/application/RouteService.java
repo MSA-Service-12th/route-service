@@ -5,6 +5,7 @@ import com.loopang.route_service.domain.exception.DuplicateRouteException;
 import com.loopang.route_service.domain.exception.RouteNotFoundException;
 import com.loopang.route_service.domain.repository.HubRouteRepository;
 import com.loopang.route_service.domain.service.RouteCalculator;
+import com.loopang.route_service.domain.service.dto.RouteCalculationResult;
 import com.loopang.route_service.presentation.dto.request.RouteCalculateRequest;
 import com.loopang.route_service.presentation.dto.request.RouteCreateRequest;
 import com.loopang.route_service.presentation.dto.request.RouteUpdateRequest;
@@ -12,6 +13,7 @@ import com.loopang.route_service.presentation.dto.response.RouteCalculateRespons
 import com.loopang.route_service.presentation.dto.response.RouteDeleteResponse;
 import com.loopang.route_service.presentation.dto.response.RouteResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,7 @@ public class RouteService {
 
     @Transactional
     public RouteResponse create(RouteCreateRequest request) {
+        // 1차 방어: 동시 요청이 아니면 여기서 400에 가까운 친절한 에러로 끝낸다.
         if (hubRouteRepository.existsByFromHubIdAndToHubId(request.getFromHubId(), request.getToHubId())) {
             throw new DuplicateRouteException();
         }
@@ -42,7 +45,12 @@ public class RouteService {
                 .active(request.getIsActive())
                 .build();
 
-        return RouteResponse.from(hubRouteRepository.save(route));
+        try {
+            // 2차 방어: 동시 요청일 때는 DB 유니크 제약(uk_hub_route_from_to)이 원자적으로 거른다.
+            return RouteResponse.from(hubRouteRepository.save(route));
+        } catch (DataIntegrityViolationException e) {
+            throw new DuplicateRouteException();
+        }
     }
 
     public RouteResponse getRoute(UUID routeId) {
@@ -71,7 +79,8 @@ public class RouteService {
     }
 
     public RouteCalculateResponse calculate(RouteCalculateRequest request) {
-        return routeCalculator.calculate(request.getFromHubId(), request.getToHubId());
+        RouteCalculationResult result = routeCalculator.calculate(request.getFromHubId(), request.getToHubId());
+        return RouteCalculateResponse.from(result);
     }
 
     private HubRoute findById(UUID routeId) {

@@ -6,7 +6,7 @@ import com.loopang.route_service.domain.repository.HubRouteRepository;
 import com.loopang.route_service.domain.service.HubStatusProvider;
 import com.loopang.route_service.domain.service.RouteCalculator;
 import com.loopang.route_service.domain.service.dto.HubStatusData;
-import com.loopang.route_service.presentation.dto.response.RouteCalculateResponse;
+import com.loopang.route_service.domain.service.dto.RouteCalculationResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -26,7 +26,7 @@ public class DijkstraRouteCalculator implements RouteCalculator {
     private static final double FULL_WEIGHT = 2.0;    // 거리 200% 가중
 
     @Override
-    public RouteCalculateResponse calculate(UUID fromHubId, UUID toHubId) {
+    public RouteCalculationResult calculate(UUID fromHubId, UUID toHubId) {
         List<HubRoute> activeRoutes = hubRouteRepository.findAllByActiveTrue();
 
         // 허브 상태 캐시 (같은 계산 내 중복 호출 방지)
@@ -85,20 +85,20 @@ public class DijkstraRouteCalculator implements RouteCalculator {
         }
 
         // 응답 구성 (실제 거리/시간은 원본 값)
-        List<RouteCalculateResponse.PathNode> pathNodes = new ArrayList<>();
+        List<RouteCalculationResult.PathNode> pathNodes = new ArrayList<>();
         for (int i = 0; i < path.size(); i++) {
-            pathNodes.add(RouteCalculateResponse.PathNode.builder()
+            pathNodes.add(RouteCalculationResult.PathNode.builder()
                     .sequence(i + 1)
                     .hubId(path.get(i))
                     .build());
         }
 
-        List<RouteCalculateResponse.RouteEdge> routeEdges = new ArrayList<>();
+        List<RouteCalculationResult.RouteEdge> routeEdges = new ArrayList<>();
         double totalDistance = 0;
         double totalDuration = 0;
         for (int i = 0; i < path.size() - 1; i++) {
             HubRoute edge = edgeMap.get(path.get(i) + "->" + path.get(i + 1));
-            routeEdges.add(RouteCalculateResponse.RouteEdge.builder()
+            routeEdges.add(RouteCalculationResult.RouteEdge.builder()
                     .sequence(i + 1)
                     .fromHubId(edge.getFromHubId())
                     .toHubId(edge.getToHubId())
@@ -109,7 +109,7 @@ public class DijkstraRouteCalculator implements RouteCalculator {
             totalDuration += edge.getDuration();
         }
 
-        return RouteCalculateResponse.builder()
+        return RouteCalculationResult.builder()
                 .fromHubId(fromHubId)
                 .toHubId(toHubId)
                 .path(pathNodes)

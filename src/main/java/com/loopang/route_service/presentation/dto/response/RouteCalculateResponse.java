@@ -1,5 +1,6 @@
 package com.loopang.route_service.presentation.dto.response;
 
+import com.loopang.route_service.domain.service.dto.RouteCalculationResult;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -16,6 +17,27 @@ public class RouteCalculateResponse {
     private List<RouteEdge> routeEdges;
     private Double totalDistance;
     private Double totalDuration;
+
+    public static RouteCalculateResponse from(RouteCalculationResult result) {
+        return RouteCalculateResponse.builder()
+                .fromHubId(result.fromHubId())
+                .toHubId(result.toHubId())
+                .path(result.path().stream()
+                        .map(n -> PathNode.builder().sequence(n.sequence()).hubId(n.hubId()).build())
+                        .toList())
+                .routeEdges(result.routeEdges().stream()
+                        .map(e -> RouteEdge.builder()
+                                .sequence(e.sequence())
+                                .fromHubId(e.fromHubId())
+                                .toHubId(e.toHubId())
+                                .distance(e.distance())
+                                .duration(e.duration())
+                                .build())
+                        .toList())
+                .totalDistance(result.totalDistance())
+                .totalDuration(result.totalDuration())
+                .build();
+    }
 
     @Getter
     @Builder

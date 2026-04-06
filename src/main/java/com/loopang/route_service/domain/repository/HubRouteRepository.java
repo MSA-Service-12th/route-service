@@ -12,6 +12,8 @@ public interface HubRouteRepository {
 
     HubRoute save(HubRoute hubRoute);
 
+    <S extends HubRoute> List<S> saveAll(Iterable<S> entities);
+
     Optional<HubRoute> findById(UUID id);
 
     Page<HubRoute> findAll(Pageable pageable);
@@ -21,4 +23,6 @@ public interface HubRouteRepository {
     Optional<HubRoute> findByFromHubIdAndToHubId(UUID fromHubId, UUID toHubId);
 
     boolean existsByFromHubIdAndToHubId(UUID fromHubId, UUID toHubId);
+
+    long count();
 }

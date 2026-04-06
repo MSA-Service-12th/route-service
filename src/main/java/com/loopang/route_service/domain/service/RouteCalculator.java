@@ -1,10 +1,10 @@
 package com.loopang.route_service.domain.service;
 
-import com.loopang.route_service.presentation.dto.response.RouteCalculateResponse;
+import com.loopang.route_service.domain.service.dto.RouteCalculationResult;
 
 import java.util.UUID;
 
 public interface RouteCalculator {
 
-    RouteCalculateResponse calculate(UUID fromHubId, UUID toHubId);
+    RouteCalculationResult calculate(UUID fromHubId, UUID toHubId);
 }

@@ -1,6 +1,7 @@
 package com.loopang.route_service.presentation.dto.request;
 
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -19,9 +20,11 @@ public class RouteCreateRequest {
     private UUID toHubId;
 
     @NotNull(message = "거리는 필수입니다.")
+    @PositiveOrZero(message = "거리는 0 이상이어야 합니다.")
     private Double distance;
 
     @NotNull(message = "소요 시간은 필수입니다.")
+    @PositiveOrZero(message = "소요 시간은 0 이상이어야 합니다.")
     private Double duration;
 
     private Boolean isActive;
