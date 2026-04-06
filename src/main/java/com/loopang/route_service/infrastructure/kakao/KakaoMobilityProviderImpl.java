@@ -65,13 +65,20 @@ public class KakaoMobilityProviderImpl implements RouteDistanceProvider {
             }
 
             KakaoDirectionsResponse.Route route = body.routes().get(0);
-            if (route.result_code() != 0 || route.summary() == null) {
+            if (route.result_code() == null || route.result_code() != 0 || route.summary() == null) {
                 log.warn("[Kakao] 길찾기 실패 result_code={} msg={}", route.result_code(), route.result_msg());
                 return null;
             }
 
-            double distanceKm = route.summary().distance() / 1000.0;
-            double durationMin = route.summary().duration() / 60.0;
+            Integer distanceM = route.summary().distance();
+            Integer durationSec = route.summary().duration();
+            if (distanceM == null || durationSec == null || distanceM < 0 || durationSec < 0) {
+                log.warn("[Kakao] 응답 distance/duration 이상: distance={}, duration={}", distanceM, durationSec);
+                return null;
+            }
+
+            double distanceKm = distanceM / 1000.0;
+            double durationMin = durationSec / 60.0;
 
             log.debug("[Kakao] ({},{}) → ({},{}) = {}km, {}min",
                     fromLat, fromLon, toLat, toLon, distanceKm, durationMin);
