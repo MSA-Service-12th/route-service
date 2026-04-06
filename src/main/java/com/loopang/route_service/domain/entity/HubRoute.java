@@ -12,13 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "p_hub_route",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uk_hub_route_from_to",
-                columnNames = {"from_hub_id", "to_hub_id"}
-        )
-)
+@Table(name = "p_hub_route")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @SQLRestriction("deleted_at IS NULL")

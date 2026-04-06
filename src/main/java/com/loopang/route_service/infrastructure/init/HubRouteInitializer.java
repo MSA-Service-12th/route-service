@@ -49,12 +49,22 @@ public class HubRouteInitializer implements ApplicationRunner {
         log.info("[HubRouteInitializer] {}개 허브 간 라우트 초기화 시작", hubs.size());
 
         List<HubRoute> routes = new ArrayList<>(hubs.size() * (hubs.size() - 1));
+        int skipped = 0;
         for (int i = 0; i < hubs.size(); i++) {
             for (int j = 0; j < hubs.size(); j++) {
                 if (i == j) continue;
 
                 HubData from = hubs.get(i);
                 HubData to = hubs.get(j);
+
+                // Hub Service 응답에 null 좌표/ID가 섞여 있어도 전체 초기화가 NPE로 죽지 않도록 방어.
+                if (!hasValidCoordinates(from) || !hasValidCoordinates(to)) {
+                    log.warn("[HubRouteInitializer] 좌표/ID 누락 허브 스킵: {} → {}",
+                            from == null ? "null" : from.name(),
+                            to == null ? "null" : to.name());
+                    skipped++;
+                    continue;
+                }
 
                 double distance = haversine(from.latitude(), from.longitude(), to.latitude(), to.longitude());
                 // 60km/h 평균 속도 가정 → distance(km) / 60 * 60(min)
@@ -72,9 +82,20 @@ public class HubRouteInitializer implements ApplicationRunner {
             }
         }
 
+        if (skipped > 0) {
+            log.warn("[HubRouteInitializer] 좌표 누락으로 {}쌍 스킵됨", skipped);
+        }
+
         // 한 트랜잭션에 한 번의 저장 — 중간 실패 시 전부 롤백돼 부분 초기화가 고착되지 않는다.
         hubRouteRepository.saveAll(routes);
         log.info("[HubRouteInitializer] 초기화 완료: {}개 라우트 생성", routes.size());
+    }
+
+    private boolean hasValidCoordinates(HubData hub) {
+        return hub != null
+                && hub.hubId() != null
+                && hub.latitude() != null
+                && hub.longitude() != null;
     }
 
     private double haversine(double lat1, double lon1, double lat2, double lon2) {

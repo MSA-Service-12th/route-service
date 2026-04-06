@@ -13,7 +13,6 @@ import com.loopang.route_service.presentation.dto.response.RouteCalculateRespons
 import com.loopang.route_service.presentation.dto.response.RouteDeleteResponse;
 import com.loopang.route_service.presentation.dto.response.RouteResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,7 +30,10 @@ public class RouteService {
 
     @Transactional
     public RouteResponse create(RouteCreateRequest request) {
-        // 1차 방어: 동시 요청이 아니면 여기서 400에 가까운 친절한 에러로 끝낸다.
+        // @SQLRestriction("deleted_at IS NULL")을 거쳐 "살아 있는" 라우트만 확인한다.
+        // DB 유니크 제약을 걸면 soft-delete된 라우트와 충돌해 (from, to) 재등록이 막히므로 제약은 두지 않는다.
+        // 이 검사는 MASTER 수동 등록 가정 — 동시 요청이 사실상 없는 환경.
+        // TODO: partial unique index(Flyway 도입 시) 또는 복구 플로우로 race condition 방어 강화.
         if (hubRouteRepository.existsByFromHubIdAndToHubId(request.getFromHubId(), request.getToHubId())) {
             throw new DuplicateRouteException();
         }
@@ -44,12 +46,7 @@ public class RouteService {
                 .active(request.getIsActive())
                 .build();
 
-        try {
-            // 2차 방어: 동시 요청일 때는 DB 유니크 제약(uk_hub_route_from_to)이 원자적으로 거른다.
-            return RouteResponse.from(hubRouteRepository.save(route));
-        } catch (DataIntegrityViolationException e) {
-            throw new DuplicateRouteException();
-        }
+        return RouteResponse.from(hubRouteRepository.save(route));
     }
 
     public RouteResponse getRoute(UUID routeId) {
