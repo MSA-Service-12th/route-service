@@ -4,7 +4,9 @@ spring:
   profiles:
     active: dev
   config:
-    import: 'optional:configserver:'
+    import:
+      - 'optional:dotenv:'
+      - 'optional:configserver:'
 
   cloud:
     config:
