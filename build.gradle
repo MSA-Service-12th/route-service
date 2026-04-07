@@ -42,6 +42,9 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
 	implementation 'org.postgresql:postgresql'
 
+	// .env 파일 자동 로딩 (로컬 개발용 환경 변수 관리)
+	implementation 'me.paulschwarz:spring-dotenv:4.0.0'
+
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
